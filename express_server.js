@@ -3,6 +3,7 @@ const app = express();
 const PORT = 8080; // default port 8080
 
 const bodyParser = require("body-parser");
+const { on } = require("nodemon");
 app.use(bodyParser.urlencoded({extended: true}));
 
 const urlDatabase = {
@@ -57,6 +58,16 @@ app.post("/urls", (req, res) => {
   res.redirect(`/urls/${shorturl}`);
 });
 
+// delete short url
+app.post("/urls/:shortURL/delete", (req,res) => {
+  const shortURL = req.params.shortURL;
+  delete urlDatabase[shortURL];
+  res.redirect("/urls");
+  
+});
+
+
+
 
 app.listen(PORT, () => {
   console.log(`Example app listening on port ${PORT}!`);
@@ -69,3 +80,4 @@ function generateRandomString() {
   return randomURL.toString();
 
 }
+
