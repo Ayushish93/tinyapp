@@ -63,7 +63,14 @@ app.post("/urls/:shortURL/delete", (req,res) => {
   const shortURL = req.params.shortURL;
   delete urlDatabase[shortURL];
   res.redirect("/urls");
-  
+});
+
+//update url
+app.post("/urls/:id", (req,res) => {
+  let id = req.params.id;
+  let newLongURL = req.body.longURL;  // user udpated yrl  
+  urlDatabase[id] = newLongURL;
+  res.redirect("/urls");
 });
 
 
