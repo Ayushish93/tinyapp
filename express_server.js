@@ -10,9 +10,24 @@ app.use(bodyParser.urlencoded({extended: true}));
 const cookieParser = require('cookie-parser');
 app.use(cookieParser());
 
+//url database
 const urlDatabase = {
   'b2xVn2': "http://www.lighthouselabs.ca",
   '9sm5xK': "http://www.google.com"
+};
+
+//user database
+const users = { 
+  "userRandomID": {
+    id: "userRandomID", 
+    email: "user@example.com", 
+    password: "purple-monkey-dinosaur"
+  },
+ "user2RandomID": {
+    id: "user2RandomID", 
+    email: "user2@example.com", 
+    password: "dishwasher-funk"
+  }
 };
 
 app.set("view engine", "ejs");
@@ -33,14 +48,27 @@ app.get("/hello", (req, res) => {
 //gives table of urls
 app.get("/urls", (req, res) => {
   
-  let templateVars = { urls: urlDatabase, username: req.cookies["username"]}; //  reading cookie that we set 
-  
+   //let templateVars = { urls: urlDatabase, user_id:req.cookies['user_id'] };
+
+  let templateVars = { urls: urlDatabase};
+  for(let user in users) {
+    if(user === req.cookies['user_id']) {
+      templateVars['user'] = users[user];
+    }
+  }
+
   res.render("urls_index", templateVars);
 });
 
 //create new short url 
 app.get("/urls/new", (req, res) => {
-  let templateVars = { username: req.cookies["username"]};
+  //let templateVars = { user_id:req.cookies['user_id'] };
+  let templateVars = {};
+  for(let user in users) {
+    if(user === req.cookies['user_id']) {
+      templateVars['user'] = users[user];
+    }
+  }
   res.render("urls_new", templateVars);
 });
 
@@ -83,19 +111,61 @@ app.post("/urls/:id", (req,res) => {
 
 //cookie-login setting cookie value
 app.post("/login", (req, res) => {
-  let username = req.body.username;
-  res.cookie('username', username);
-  res.redirect('/urls');
+  
+  let email = req.body.email;
+  let password = req.body.password;      
+  let id = verifyEmailPassword(email, password);
+  if(id) {
+    res.cookie('user_id', id);
+    res.redirect('/urls');
+  }
+  else {
+    res.status(403).json({message: 'email/password not found'});
+  }
+
 });
 
 
 // logout and clear cookie
 app.post("/logout", (req, res) => {
- res.clearCookie('username');
-res.redirect("/urls");
+ res.clearCookie('user_id');
+ res.redirect("/urls");
 });
 
+//returns the user registraion page
+app.get("/register", (req, res) => {
+  let id = req.cookies['user_id'];
+  let userobj = users[id];
+  let templateVars = { user: userobj };
+ 
+  res.render("user_reg",templateVars);
+});
 
+//Registring users and adding in db
+app.post("/register", (req, res) => {
+
+  let id = generateRandomString();
+  res.cookie('user_id', id);      // setting cookie with id
+
+  let email = req.body.email;
+  let password = req.body.password;
+  let emailExist = emailLookup(email);
+  if(emailExist) {                    // checking if email exist
+    res.status(400).json({message: 'email already registered'});
+  }
+
+  if(!email || !password) {           // checking if email or pass is num empty
+    res.status(400).json({message: 'Bad Request no username/password provided'});
+  }
+  let userData = {id, email, password};
+  users[id] = userData; // adding user info to db
+  res.redirect("/urls");
+});
+
+// Get login page
+app.get("/login", (req,res) => {
+  res.render("login_form");
+});
 
 app.listen(PORT, () => {
   console.log(`Example app listening on port ${PORT}!`);
@@ -109,3 +179,23 @@ function generateRandomString() {
 
 }
 
+//function to check if email exist
+function emailLookup(email) {
+  for(let user in users) {
+    if(users[user].email === email) {
+      return true;
+    }
+  }
+  return false;
+}
+
+// function to verify email and password
+function verifyEmailPassword (email, password) {
+  let id ;
+  for(let user in users) {
+    if(users[user].email === email && users[user].password === password) {
+      id = users[user]['id'];
+    }
+  }
+  return id;
+}

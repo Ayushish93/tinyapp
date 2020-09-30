@@ -12,14 +12,12 @@
       </div>
     </div>
 
-    <% if (!username) { %>
-      <form class="form-inline" method="POST" action="/login">
-        <input class="form-control" type="text" name="username"  style="width: 300px; margin: 1em">
-        <button type="submit" class="btn btn-outline-dark">submit</button>  
-      </form> 
+    <% if (!locals.user) { %>
+      <a class="nav-item nav-link" href="/login">Login </a> 
+      <a class="nav-item nav-link" href="/register">Register </a>
     <% } else { %>
       <form class="form-inline" method="POST" action="/logout">
-        <li class="nav-item nav-link" href=""> Logged In As: <%=username%></li>
+        <li class="nav-item nav-link" href=""> Logged In As: <%=user.email%></li>
         <button type="submit" class="btn btn-outline-dark">Logout</button>
     </form>
    <% } %> 
