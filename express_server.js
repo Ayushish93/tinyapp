@@ -6,6 +6,10 @@ const bodyParser = require("body-parser");
 const { on } = require("nodemon");
 app.use(bodyParser.urlencoded({extended: true}));
 
+//cookie parser
+const cookieParser = require('cookie-parser');
+app.use(cookieParser());
+
 const urlDatabase = {
   'b2xVn2': "http://www.lighthouselabs.ca",
   '9sm5xK': "http://www.google.com"
@@ -28,19 +32,23 @@ app.get("/hello", (req, res) => {
 
 //gives table of urls
 app.get("/urls", (req, res) => {
-  const templateVars = { urls: urlDatabase };
+  
+  let templateVars = { urls: urlDatabase, username: req.cookies["username"]}; //  reading cookie that we set 
+  
   res.render("urls_index", templateVars);
 });
 
 //create new short url 
 app.get("/urls/new", (req, res) => {
-  res.render("urls_new");
+  let templateVars = { username: req.cookies["username"]};
+  res.render("urls_new", templateVars);
 });
 
 //displays the shorturl
 app.get("/urls/:shortURL", (req,res) => {
   
   const templateVars = { shortURL: req.params.shortURL, longURL: urlDatabase[req.params.shortURL]};
+  
   res.render("urls_show", templateVars);
 });
 
@@ -68,11 +76,24 @@ app.post("/urls/:shortURL/delete", (req,res) => {
 //update url
 app.post("/urls/:id", (req,res) => {
   let id = req.params.id;
-  let newLongURL = req.body.longURL;  // user udpated yrl  
+  let newLongURL = req.body.longURL;  // user enter url;  
   urlDatabase[id] = newLongURL;
   res.redirect("/urls");
 });
 
+//cookie-login setting cookie value
+app.post("/login", (req, res) => {
+  let username = req.body.username;
+  res.cookie('username', username);
+  res.redirect('/urls');
+});
+
+
+// logout and clear cookie
+app.post("/logout", (req, res) => {
+ res.clearCookie('username');
+res.redirect("/urls");
+});
 
 
 
