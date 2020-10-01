@@ -74,13 +74,12 @@ app.get("/", (req, res) => {
 app.get("/urls", (req, res) => {
   
   let id = req.session.user_id;    // checking if user is login 
-  if(id) {
+  if (id) {
     let url = urlsForUser(id);
     let templateVars = { urls: url};
     for(let user in users) {
       if(user === id) {
         templateVars['user'] = users[user];
-        
       }
     }
     res.render("urls_index", templateVars);
@@ -95,7 +94,7 @@ app.get("/urls", (req, res) => {
 app.get("/urls/new", (req, res) => {
 
   let id = req.session.user_id; //check if user is logged in
-  if(id) {
+  if (id) {
     let templateVars = {};
     for(let user in users) {
       if(user === id) {
@@ -114,8 +113,7 @@ app.get("/urls/new", (req, res) => {
 app.get("/urls/:shortURL", (req,res) => {
   let id = req.session.user_id; // check if user is logged in
   if (id) {
-    
-    if(urlDatabase[req.params.shortURL]) {    // check if url is present in db
+    if (urlDatabase[req.params.shortURL]) {    // check if url is present in db
       let templateVars = { shortURL: req.params.shortURL, longURL: urlDatabase[req.params.shortURL]['longURL']};
       for(let user in users) {
         if(user === id) {
@@ -136,7 +134,7 @@ app.get("/urls/:shortURL", (req,res) => {
 //redirects to longurl for given shorturl
 app.get("/u/:shortURL", (req, res) => {
   let id = req.session.user_id; 
-  if(id) {
+  if (id) {
     const shortURL = req.params.shortURL;   // check if short url is in db
     if(urlDatabase[shortURL]) {
       let longurl = urlDatabase[shortURL]['longURL'];
@@ -155,7 +153,7 @@ app.get("/u/:shortURL", (req, res) => {
 //adding new url to database and redirecting to shorturl
 app.post("/urls", (req, res) => {
   let id = req.session.user_id; 
-  if(id) {
+  if (id) {
     let shorturl = generateRandomString(); // getting random shorturl
     urlDatabase[shorturl] = {longURL:req.body.longURL, userID:id};
     res.redirect(`/urls/${shorturl}`);
@@ -168,10 +166,9 @@ app.post("/urls", (req, res) => {
 // delete short url
 app.post("/urls/:shortURL/delete", (req,res) => {
   let id = req.session.user_id;
-  if(id) {
+  if (id) {
     let shortURL= req.params.shortURL;
-    
-    if(id === urlDatabase[shortURL]['userID']) {  // checking user id with the current user
+    if (id === urlDatabase[shortURL]['userID']) {  // checking user id with the current user
       const shortURL = req.params.shortURL;
       delete urlDatabase[shortURL];
       res.redirect("/urls");
@@ -190,7 +187,7 @@ app.post("/urls/:shortURL", (req,res) => {
 
   let id = req.session.user_id;
   let shortURL= req.params.shortURL;
-  if(id === urlDatabase[shortURL]['userID']) {
+  if (id === urlDatabase[shortURL]['userID']) {
     let shortURL = req.params.shortURL;
     let newLongURL = req.body.longURL;  // user enter url;  
     urlDatabase[shortURL].longURL = newLongURL;
@@ -204,17 +201,16 @@ app.post("/login", (req, res) => {
   let email = req.body.email;
   let password = req.body.password;   
   let id = getUserByEmail(email, users);  // getting userid by email  
-  if(id) {
+  if (id) {
     let passwordcheck = bcrypt.compareSync(password, users[id].password); // checking password
-    if(passwordcheck) {
+    if (passwordcheck) {
       req.session.user_id = id;
       res.redirect('/urls');
     }
     else {
       res.status(403).json({message: 'password incorrect'});
     }
-  }
-  else {
+  } else {
     res.status(403).json({message: 'email/password not found'});
   }
 
@@ -234,7 +230,6 @@ app.get("/register", (req, res) => {
   let id = req.session.user_id;
   let userobj = users[id];
   let templateVars = { user: userobj };
- 
   res.render("user_reg",templateVars);
 });
 
@@ -248,17 +243,15 @@ app.post("/register", (req, res) => {
   let password = bcrypt.hashSync(password_nonhashed, 10);   //hashing password
 
   let emailExist = getUserByEmail(email, users);
-  if(emailExist) {                    // checking if email exist
+  if (emailExist) {                    // checking if email exist
     res.status(400).json({message: 'email already registered'});
   }
 
-  if(!email || !password) {           // checking if email or pass is num empty
+  if (!email || !password) {           // checking if email or pass is num empty
     res.status(400).json({message: 'Bad Request no username/password provided'});
   }
   let userData = {id, email, password};
   users[id] = userData; // adding user info to db
-
-  
   res.redirect("/urls");
 });
 
@@ -287,8 +280,8 @@ function urlsForUser(id) {
   let shortURL;
   let longURL;
   let url = {};
-  for(let user in urlDatabase) {
-    if(urlDatabase[user]['userID'] === id) {
+  for (let user in urlDatabase) {
+    if (urlDatabase[user]['userID'] === id) {
       shortURL = user;
       longURL = urlDatabase[user]['longURL'];
       url[shortURL] = longURL;
