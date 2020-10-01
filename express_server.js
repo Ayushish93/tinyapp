@@ -11,10 +11,16 @@ const cookieParser = require('cookie-parser');
 app.use(cookieParser());
 
 //url database
+// const urlDatabase = {
+//   'b2xVn2': "http://www.lighthouselabs.ca",
+//   '9sm5xK': "http://www.google.com"
+// };
+
 const urlDatabase = {
-  'b2xVn2': "http://www.lighthouselabs.ca",
-  '9sm5xK': "http://www.google.com"
+  b6UTxQ: { longURL: "https://www.tsn.ca", userID: "aJ48lW" },
+  i3BoGr: { longURL: "https://www.google.ca", userID: "aJ48lW" }
 };
+
 
 //user database
 const users = { 
@@ -27,6 +33,11 @@ const users = {
     id: "user2RandomID", 
     email: "user2@example.com", 
     password: "dishwasher-funk"
+  },
+  "aJ48lW": {
+    id: "aJ48lW",
+    email: "Ayushi@gmail.com",
+    password: "123"
   }
 };
 
@@ -48,21 +59,30 @@ app.get("/hello", (req, res) => {
 //gives table of urls
 app.get("/urls", (req, res) => {
   
-   //let templateVars = { urls: urlDatabase, user_id:req.cookies['user_id'] };
+  let id = req.cookies['user_id'];    // to check if use is logged in
+  if(id) {
 
-  let templateVars = { urls: urlDatabase};
-  for(let user in users) {
-    if(user === req.cookies['user_id']) {
-      templateVars['user'] = users[user];
+    let url = urlsForUser(id);
+    let templateVars = { urls: url};
+    for(let user in users) {
+      if(user === req.cookies['user_id']) {
+        templateVars['user'] = users[user];
+        
+      }
     }
+    res.render("urls_index", templateVars);
+  }
+  else {
+    
+    res.redirect('/login');
   }
 
-  res.render("urls_index", templateVars);
 });
 
 //create new short url 
 app.get("/urls/new", (req, res) => {
-  //let templateVars = { user_id:req.cookies['user_id'] };
+ let id = req.cookies['user_id'];    // checking if user is login
+ if(id) {
   let templateVars = {};
   for(let user in users) {
     if(user === req.cookies['user_id']) {
@@ -70,14 +90,31 @@ app.get("/urls/new", (req, res) => {
     }
   }
   res.render("urls_new", templateVars);
+ }
+ else {
+   res.redirect("/login");
+ }
+
 });
 
 //displays the shorturl
 app.get("/urls/:shortURL", (req,res) => {
-  
-  const templateVars = { shortURL: req.params.shortURL, longURL: urlDatabase[req.params.shortURL]};
-  
-  res.render("urls_show", templateVars);
+  let id = req.cookies['user_id'];    // checking if user is login
+  if (id) {
+    let url = urlsForUser(id);
+    let templateVars = { shortURL: req.params.shortURL, longURL: urlDatabase[req.params.shortURL]['longURL']};
+
+    for(let user in users) {
+      if(user === req.cookies['user_id']) {
+        templateVars['user'] = users[user];
+      }
+    }
+    res.render("urls_show", templateVars);
+  }
+  else {
+    res.redirect('/login');
+  }
+    
 });
 
 //redirects to longurl for given shorturl
@@ -96,17 +133,28 @@ app.post("/urls", (req, res) => {
 
 // delete short url
 app.post("/urls/:shortURL/delete", (req,res) => {
-  const shortURL = req.params.shortURL;
-  delete urlDatabase[shortURL];
+  let id = req.cookies['user_id'];
+  let shortURL= req.params.shortURL;
+  if(id === urlDatabase[shortURL]['userID']) {
+    const shortURL = req.params.shortURL;
+    delete urlDatabase[shortURL];
+  }
+  
   res.redirect("/urls");
 });
 
 //update url
-app.post("/urls/:id", (req,res) => {
-  let id = req.params.id;
-  let newLongURL = req.body.longURL;  // user enter url;  
-  urlDatabase[id] = newLongURL;
-  res.redirect("/urls");
+app.post("/urls/:shortURL", (req,res) => {
+
+  let id = req.cookies['user_id'];
+  let shortURL= req.params.shortURL;
+  if(id === urlDatabase[shortURL]['userID']) {
+    let shortURL = req.params.shortURL;
+    let newLongURL = req.body.longURL;  // user enter url;  
+    urlDatabase[shortURL].longURL = newLongURL;
+    console.log("new database",urlDatabase);
+    res.redirect("/urls");
+  }
 });
 
 //cookie-login setting cookie value
@@ -198,4 +246,21 @@ function verifyEmailPassword (email, password) {
     }
   }
   return id;
+}
+
+
+
+//function returns url for the current user
+function urlsForUser(id) {
+  let shortURL;
+  let longURL;
+  let url = {};
+  for(let user in urlDatabase) {
+    if(urlDatabase[user]['userID'] === id) {
+      shortURL = user;
+      longURL = urlDatabase[user]['longURL'];
+      url[shortURL] = longURL;
+    }
+  }
+  return url;
 }

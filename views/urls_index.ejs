@@ -9,6 +9,7 @@
 <body>
   <%- include('partials/_header') %>
   <main style="margin: 1em;">
+    
     <h3>My URLs</h3>
     <table class="table">
       <thead>
@@ -20,6 +21,7 @@
         </tr>
       </thead>
       <tbody>
+       <% if (urls)  { %>
         <% for(let url in urls) { %>
           <tr>
            
@@ -30,6 +32,12 @@
           </tr>
 
         <% } %>
+
+      <% } %>
+
+      
+
+
       </tbody>
     </table>
   </main>
