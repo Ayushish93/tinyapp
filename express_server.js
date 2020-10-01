@@ -10,6 +10,9 @@ app.use(bodyParser.urlencoded({extended: true}));
 const cookieParser = require('cookie-parser');
 app.use(cookieParser());
 
+//brcypt for hashing password
+const bcrypt = require('bcrypt');
+
 //url database
 // const urlDatabase = {
 //   'b2xVn2': "http://www.lighthouselabs.ca",
@@ -21,6 +24,9 @@ const urlDatabase = {
   i3BoGr: { longURL: "https://www.google.ca", userID: "aJ48lW" }
 };
 
+
+const password = "123"; // found in the req.params object
+const hashedPassword = bcrypt.hashSync(password, 10);
 
 //user database
 const users = { 
@@ -37,7 +43,7 @@ const users = {
   "aJ48lW": {
     id: "aJ48lW",
     email: "Ayushi@gmail.com",
-    password: "123"
+    password: hashedPassword
   }
 };
 
@@ -161,7 +167,8 @@ app.post("/urls/:shortURL", (req,res) => {
 app.post("/login", (req, res) => {
   
   let email = req.body.email;
-  let password = req.body.password;      
+  let password = req.body.password;   
+
   let id = verifyEmailPassword(email, password);
   if(id) {
     res.cookie('user_id', id);
@@ -196,7 +203,8 @@ app.post("/register", (req, res) => {
   res.cookie('user_id', id);      // setting cookie with id
 
   let email = req.body.email;
-  let password = req.body.password;
+  let password_nonhashed = req.body.password;
+  let password = bcrypt.hashSync(password_nonhashed, 10);   //hashing password
   let emailExist = emailLookup(email);
   if(emailExist) {                    // checking if email exist
     res.status(400).json({message: 'email already registered'});
@@ -207,6 +215,8 @@ app.post("/register", (req, res) => {
   }
   let userData = {id, email, password};
   users[id] = userData; // adding user info to db
+
+  
   res.redirect("/urls");
 });
 
@@ -240,8 +250,15 @@ function emailLookup(email) {
 // function to verify email and password
 function verifyEmailPassword (email, password) {
   let id ;
+  
+  // for(let user in users) {
+  //   if(users[user].email === email && users[user].password === password) {
+  //     id = users[user]['id'];
+  //   }
+  // }
   for(let user in users) {
-    if(users[user].email === email && users[user].password === password) {
+    let passwordcheck = bcrypt.compareSync(password, users[user].password);
+    if(users[user].email === email && passwordcheck) {
       id = users[user]['id'];
     }
   }
