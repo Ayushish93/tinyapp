@@ -3,7 +3,7 @@ const app = express();
 const PORT = 8080; // default port 8080
 
 // helper function module
-const { getUserByEmail } = require('./helpers.js');
+const { getUserByEmail } = require("./helpers.js");
 
 //body parser 
 const bodyParser = require("body-parser");
@@ -11,14 +11,14 @@ const { on } = require("nodemon");
 app.use(bodyParser.urlencoded({extended: true}));
 
 // cookie-session
-var cookieSession = require('cookie-session');
+var cookieSession = require("cookie-session");
 app.use(cookieSession({
   name: 'session',
   keys: ['key1']
 }));
 
 //brcypt for hashing password
-const bcrypt = require('bcrypt');
+const bcrypt = require("bcrypt");
 
 // url database
 const urlDatabase = {
@@ -87,7 +87,7 @@ app.set("view engine", "ejs");
 // route to login/urls page
 app.get("/", (req, res) => {
   let id = req.session.user_id;
-  if(id) {
+  if (id) {
     res.redirect('/urls');
   } else {
     res.redirect('/login');
@@ -104,8 +104,8 @@ app.get("/urls", (req, res) => {
   if (id) {
     let url = urlsForUser(id);
     let templateVars = { urls: url};
-    for(let user in users) {
-      if(user === id) {
+    for (let user in users) {
+      if (user === id) {
         templateVars['user'] = users[user];
       }
     }
@@ -126,7 +126,7 @@ app.get("/urls/new", (req, res) => {
   console.log("here is =>",id);
   if (id) {
     let templateVars = {};
-    for(let user in users) {
+    for (let user in users) {
       if(user === id) {
         templateVars['user'] = users[user];
       }
@@ -147,8 +147,8 @@ app.get("/urls/:shortURL", (req,res) => {
   if (id) {
     if (urlDatabase[req.params.shortURL]) {    // check if url is present in db
       let templateVars = { shortURL: req.params.shortURL, longURL: urlDatabase[req.params.shortURL]['longURL']};
-      for(let user in users) {
-        if(user === id) {
+      for (let user in users) {
+        if (user === id) {
           templateVars['user'] = users[user];
         }
       }
@@ -174,7 +174,7 @@ app.get("/u/:shortURL", (req, res) => {
   let templateVars = { user: userobj}; 
   
     const shortURL = req.params.shortURL;   // check if short url is in db
-    if(urlDatabase[shortURL]) {
+    if (urlDatabase[shortURL]) {
       let longurl = urlDatabase[shortURL]['longURL'];
       res.redirect(longurl);
     }
@@ -231,7 +231,7 @@ app.post("/urls/:shortURL", (req,res) => {
   let id = req.session.user_id;
   let userobj = users[id];  // setting template variable
   let templateVars = { user: userobj};
-  if(id) {
+  if (id) {
     let shortURL= req.params.shortURL;
     if (id === urlDatabase[shortURL]['userID']) {
       let shortURL = req.params.shortURL;
